@@ -1,0 +1,10 @@
+# Minimal test dictionary with format: word frequency tag
+test 1000 TEST
+hello 900 GREETING
+world 800 NOUN
+python 700 TECH
+code 600 TECH
+learning 500 EDUCATION
+教育 400 EDUCATION
+测试 300 TEST
+编程 200 TECH 

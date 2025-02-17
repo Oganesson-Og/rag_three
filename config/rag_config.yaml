@@ -1,0 +1,84 @@
+# RAG Pipeline Configuration
+# -------------------------
+# Configuration file for the RAG pipeline system
+
+# Global settings
+global:
+  logging_level: "INFO"
+  environment: "development"
+
+# Component-specific configurations
+components:
+  extraction:
+    chunk_size: 1000
+    overlap: 200
+    
+  chunking:
+    min_chunk_size: 100
+    max_chunk_size: 2000
+    
+  diagram:
+    use_basic: false
+    model_path: null
+    device: "cpu"
+    confidence_threshold: 0.5
+    max_diagrams: 10
+    ocr_enabled: true
+    
+  educational:
+    grade_level: "Form 4"
+    subject: "mathematics"
+    cross_modal:
+      model_name: "Qwen/Qwen2.5-VL-7B"  # Using base model
+      device: "mps"  # Specific for M-series Apple Silicon
+      max_length: 2048
+      batch_size: 1
+      temperature: 0.7
+      top_p: 0.9
+    
+  feedback:
+    enabled: true
+    metrics_enabled: true
+
+# Cache configuration
+cache:
+  enabled: true
+  ttl: 3600
+  max_size: 1000
+  redis_url: "redis://localhost:6379"
+  backend: "redis"
+
+# Vector store configuration
+vector_store:
+  type: "qdrant"
+  collection_name: "mathematics"
+  dimension: 1536
+  similarity_threshold: 0.8
+
+# Database configuration
+database:
+  url: "sqlite:///rag_pipeline.db"
+  pool_size: 5
+  max_overflow: 10
+
+# Model Configuration
+model:
+  type: "openai"  # or "google" or "llama"
+  openai_api_key: ""  # Your OpenAI API key
+  google_api_key: ""  # Your Google API key
+  temperature: 0.7
+  max_tokens: 1000
+
+# Document Processing
+processing:
+  chunk_size: 1000
+  chunk_overlap: 200
+  extract_math: true
+  math_complexity_threshold: 0.7
+  extract_diagrams: true
+  ocr_enabled: true
+
+# Logging
+logging:
+  level: "INFO"
+  file: "logs/rag_pipeline.log"

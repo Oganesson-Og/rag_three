@@ -1,0 +1,56 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .node {
+      fill: none;
+      stroke: black;
+      stroke-width: 2;
+    }
+    .text {
+      font-family: sans-serif;
+      font-size: 14px;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+    .arrow {
+      stroke: black;
+      stroke-width: 2;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="0" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="black" />
+    </marker>
+  </defs>
+
+  <g transform="translate(50,50)">
+    <rect x="0" y="0" width="150" height="50" class="node"/>
+    <text x="75" y="25" class="text">User Input</text>
+
+    <rect x="250" y="0" width="150" height="50" class="node"/>
+    <text x="325" y="25" class="text">Agent Planning</text>
+
+    <rect x="500" y="0" width="150" height="50" class="node"/>
+    <text x="575" y="25" class="text">Action Execution</text>
+
+    <rect x="500" y="150" width="150" height="50" class="node"/>
+    <text x="575" y="175" class="text">Observation/<tspan x="575" dy="15">Feedback</tspan></text>
+
+    <rect x="250" y="150" width="150" height="50" class="node"/>
+    <text x="325" y="175" class="text">Reflection/<tspan x="325" dy="15">Learning</tspan></text>
+
+    <rect x="0" y="150" width="150" height="50" class="node"/>
+    <text x="75" y="175" class="text">Output/<tspan x="75" dy="15">Response</tspan></text>
+
+
+    <path d="M150 25 L250 25" class="arrow"/>
+    <path d="M400 25 L500 25" class="arrow"/>
+    <path d="M575 50 L575 150" class="arrow"/>
+    <path d="M500 175 L400 175" class="arrow"/>
+    <path d="M250 175 L150 175" class="arrow"/>
+    <path d="M75 50 L75 150" class="arrow"/>
+
+
+    </g>
+</svg>
