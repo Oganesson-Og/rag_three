@@ -19,6 +19,7 @@ Usage:
 
     # First, ingest your content
     python -m src.scripts.ingest_documents --input_dir /path/to/content --config config.yaml
+    python -m src.scripts.ingest_documents --input_dir "knowledge_bank/Form 4/mathematics/mathematics" --config config/rag_config.yaml
 
     # Then use the pipeline for queries (in your application)
     from src.rag.pipeline import Pipeline
