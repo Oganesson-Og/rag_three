@@ -109,7 +109,7 @@ class PDFExtractor(BaseExtractor):
             layout_config = self.config.get('layout', {})
             
             self.layout_recognizer = LayoutRecognizer(
-                model_path=layout_config.get('model_path', ""),
+                model_dir=layout_config.get('model_dir', ""),
                 device=layout_config.get('device', "cuda"),
                 batch_size=layout_config.get('batch_size', 32),
                 cache_dir=layout_config.get('cache_dir'),

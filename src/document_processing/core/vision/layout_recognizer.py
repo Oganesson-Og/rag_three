@@ -79,32 +79,31 @@ class LayoutRecognizer(Recognizer):
     
     def __init__(
         self,
+        model_dir: str = "",
+        device: str = "cuda",
+        batch_size: int = 32,
+        cache_dir: Optional[str] = None,
         model_type: str = 'yolov10',
         confidence: float = 0.5,
         merge_boxes: bool = True,
         label_list: Optional[List[str]] = None,
-        task_name: str = "document_layout",
-        model_path: str = "",
-        device: str = "cuda",
-        batch_size: int = 32,
-        cache_dir: Optional[str] = None
+        task_name: str = "document_layout"
     ):
         """Initialize layout recognizer."""
         super().__init__(
-            model_path=model_path,
+            model_dir=model_dir,
             device=device,
             batch_size=batch_size,
-            cache_dir=cache_dir
+            cache_dir=cache_dir,
+            label_list=label_list or [
+                "title", "text", "list", "table", "figure", 
+                "header", "footer", "sidebar", "caption"
+            ],
+            task_name=task_name
         )
         self.model_type = model_type
         self.confidence = confidence
         self.merge_boxes = merge_boxes
-        self.label_list = label_list or [
-            "title", "text", "list", "table", "figure", 
-            "header", "footer", "sidebar", "caption"
-        ]
-        self.task_name = task_name
-        self._init_model()
         
     def _init_model(self):
         """Initialize the YOLO model."""
