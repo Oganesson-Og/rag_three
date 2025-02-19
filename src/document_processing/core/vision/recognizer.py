@@ -77,21 +77,79 @@ class Recognizer:
     
     def __init__(
         self,
-        model_path: str,
+        model_dir: Optional[str] = None,
         device: str = "cuda",
         batch_size: int = 32,
         cache_dir: Optional[str] = None,
         label_list: Optional[List[str]] = None,
         task_name: str = "document_layout"
     ):
-        self.model_path = model_path
+        """
+        Initialize the Recognizer.
+
+        If `model_dir` is not provided, the model file will be looked for in the
+        project's default directory and downloaded via HuggingFace snapshot if not found.
+
+        Args:
+            model_dir: Path to the directory containing model files.
+            device: Device to use (e.g., "cuda" or "cpu").
+            batch_size: Batch size for processing.
+            cache_dir: Directory for caching models.
+            label_list: List of labels.
+            task_name: Specific task name for model selection.
+        """
         self.device = device
         self.batch_size = batch_size
         self.cache_dir = cache_dir
         self.label_list = label_list or []
         self.task_name = task_name
-        self.model = self._load_model()
+
+        # Determine model directory and file path
+        if not model_dir:
+            model_dir = os.path.join(get_project_base_directory(), "rag/res/deepdoc")
+            model_file_path = os.path.join(model_dir, task_name + ".onnx")
+            if not os.path.exists(model_file_path):
+                model_dir = snapshot_download(
+                    repo_id="InfiniFlow/deepdoc",
+                    local_dir=os.path.join(get_project_base_directory(), "rag/res/deepdoc"),
+                    local_dir_use_symlinks=False
+                )
+                model_file_path = os.path.join(model_dir, task_name + ".onnx")
+        else:
+            model_file_path = os.path.join(model_dir, task_name + ".onnx")
+
+        if not os.path.exists(model_file_path):
+            raise ValueError("Model file not found: {}".format(model_file_path))
         
+        self.model_dir = model_dir
+
+        # ONNX Runtime session options and session initialization
+        self.run_options = onnxruntime.RunOptions()
+
+        if onnxruntime.get_device() == "GPU":
+            options = onnxruntime.SessionOptions()
+            options.enable_cpu_mem_arena = False
+            cuda_provider_options = {
+                "device_id": 0,  # Use specific GPU
+                "gpu_mem_limit": 512 * 1024 * 1024,  # Limit GPU memory
+                "arena_extend_strategy": "kNextPowerOfTwo",
+            }
+            self.ort_sess = onnxruntime.InferenceSession(
+                model_file_path, options=options,
+                providers=['CUDAExecutionProvider'],
+                provider_options=[cuda_provider_options]
+            )
+            self.run_options.add_run_config_entry("memory.enable_memory_arena_shrinkage", "gpu:0")
+            logging.info(f"Recognizer {task_name} uses GPU")
+        else:
+            self.ort_sess = onnxruntime.InferenceSession(model_file_path, providers=['CPUExecutionProvider'])
+            self.run_options.add_run_config_entry("memory.enable_memory_arena_shrinkage", "cpu")
+            logging.info(f"Recognizer {task_name} uses CPU")
+
+        self.input_names = [node.name for node in self.ort_sess.get_inputs()]
+        self.output_names = [node.name for node in self.ort_sess.get_outputs()]
+        self.input_shape = self.ort_sess.get_inputs()[0].shape[2:4]
+
     def _load_model(self):
         """Load model from path or download if needed."""
         pass
@@ -107,62 +165,6 @@ class Recognizer:
     def __call__(self, image: Union[str, Image.Image]) -> Dict[str, Any]:
         """Process single image."""
         pass
-
-    def __init__(self, label_list, task_name, model_dir=None):
-        """
-        If you have trouble downloading HuggingFace models, -_^ this might help!!
-
-        For Linux:
-        export HF_ENDPOINT=https://hf-mirror.com
-
-        For Windows:
-        Good luck
-        ^_-
-
-        """
-        if not model_dir:
-            model_dir = os.path.join(
-                        get_project_base_directory(),
-                        "rag/res/deepdoc")
-            model_file_path = os.path.join(model_dir, task_name + ".onnx")
-            if not os.path.exists(model_file_path):
-                model_dir = snapshot_download(repo_id="InfiniFlow/deepdoc",
-                                              local_dir=os.path.join(get_project_base_directory(), "rag/res/deepdoc"),
-                                              local_dir_use_symlinks=False)
-                model_file_path = os.path.join(model_dir, task_name + ".onnx")
-        else:
-            model_file_path = os.path.join(model_dir, task_name + ".onnx")
-
-        if not os.path.exists(model_file_path):
-            raise ValueError("not find model file path {}".format(
-                model_file_path))
-        # https://github.com/microsoft/onnxruntime/issues/9509#issuecomment-951546580
-        # Shrink GPU memory after execution
-        self.run_options = onnxruntime.RunOptions()
-
-        if onnxruntime.get_device() == "GPU":
-            options = onnxruntime.SessionOptions()
-            options.enable_cpu_mem_arena = False
-            cuda_provider_options = {
-                "device_id": 0, # Use specific GPU
-                "gpu_mem_limit": 512 * 1024 * 1024, # Limit gpu memory
-                "arena_extend_strategy": "kNextPowerOfTwo",  # gpu memory allocation strategy
-            }
-            self.ort_sess = onnxruntime.InferenceSession(
-                model_file_path, options=options,
-                providers=['CUDAExecutionProvider'],
-                provider_options=[cuda_provider_options]
-            )
-            self.run_options.add_run_config_entry("memory.enable_memory_arena_shrinkage", "gpu:0")
-            logging.info(f"Recognizer {task_name} uses GPU")
-        else:
-            self.ort_sess = onnxruntime.InferenceSession(model_file_path, providers=['CPUExecutionProvider'])
-            self.run_options.add_run_config_entry("memory.enable_memory_arena_shrinkage", "cpu")
-            logging.info(f"Recognizer {task_name} uses CPU")
-        self.input_names = [node.name for node in self.ort_sess.get_inputs()]
-        self.output_names = [node.name for node in self.ort_sess.get_outputs()]
-        self.input_shape = self.ort_sess.get_inputs()[0].shape[2:4]
-        self.label_list = label_list
 
     @staticmethod
     def sort_Y_firstly(arr, threashold):
